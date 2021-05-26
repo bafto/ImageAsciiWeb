@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"html/template"
@@ -10,8 +11,6 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
-	"os"
-	"strconv"
 	"sync"
 )
 
@@ -98,6 +97,7 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if nil != err {
 			http.Error(w, err.Error(), status)
+			log.Println(err)
 		}
 	}()
 	if err = r.ParseMultipartForm(32 << 20); nil != err {
@@ -114,19 +114,17 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 				status = http.StatusInternalServerError
 				return
 			}
-			// open destination
-			var outfile *os.File
-			if outfile, err = os.Create("./" + hdr.Filename); nil != err {
+			buff := bytes.NewBuffer(nil)
+			if _, err = io.Copy(buff, infile); nil != err {
 				status = http.StatusInternalServerError
 				return
 			}
-			// 32K buffer copy
-			var written int64
-			if written, err = io.Copy(outfile, infile); nil != err {
+			var text string
+			if text, err = ImageToAscii(buff); nil != err {
 				status = http.StatusInternalServerError
 				return
 			}
-			w.Write([]byte("uploaded file:" + hdr.Filename + ";length:" + strconv.Itoa(int(written))))
+			w.Write([]byte(text))
 		}
 	}
 }
