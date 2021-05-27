@@ -20,29 +20,10 @@ func ImageToAscii(r io.Reader) (text string, err error) {
 	if err != nil {
 		return
 	}
+	img = resize.Thumbnail(200, 100, img, resize.Lanczos3)
 
-	width, height := img.Bounds().Max.X, img.Bounds().Max.Y
-
-	/*if width > height {
-		if width > 150 {
-			img = resize.Resize(150, 0, img, resize.Lanczos3)
-		}
-	} else if height > width {
-		if height > 100 {
-			img = resize.Resize(0, 100, img, resize.Lanczos3)
-		}
-	} else {
-		if width > 150 {
-			img = resize.Resize(150, 0, img, resize.Lanczos3)
-		} else if height > 100 {
-			img = resize.Resize(0, 100, img, resize.Lanczos3)
-		}
-	}*/
-	img = resize.Resize(150, 0, img, resize.Lanczos3)
-	//img = resize.Thumbnail(150, 100, img, resize.Lanczos3)
-
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := 0; y < img.Bounds().Max.Y; y++ {
+		for x := 0; x < img.Bounds().Max.X; x++ {
 			r, g, b, _ := img.At(x, y).RGBA()
 			pixel := (r + g + b) / 3
 			text += grayscale[mapRange(int(pixel), 0, 65535, 0, 7)]
